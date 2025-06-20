@@ -53,7 +53,7 @@ def send_gotify_notification(project_id, message):
             json={  
                 "message": message,
                 "priority": 8,
-                "title": "BW/BWL票务状态变化，可能是有票啦！",
+                "title": "BW/BML票务状态变化，可能是有票啦！",
                 "extras": {
                     "client::notification": {
                         "click": {
