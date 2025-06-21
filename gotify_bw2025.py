@@ -5,9 +5,10 @@ from datetime import datetime
 
 # 配置常量
 PROJECT_IDS = {"BW": "102194", "BML": "102626"} 
-CHECK_INTERVAL = 5  # 检查间隔(秒)
+PROJECT_NAMES = {"102194": "BW", "102626": "BML"}  # 新增项目ID到名称的映射
+CHECK_INTERVAL = 1  # 检查间隔(秒)
 GOTIFY_URL = "http://localhost:8080"  # Gotify服务器地址
-GOTIFY_TOKEN = ""  # Gotify应用token
+GOTIFY_TOKEN = "Apq--PMSLTGCNsV"  # Gotify应用token
 
 def get_ticket_status(project_id):
     try:
@@ -46,14 +47,14 @@ def get_ticket_status(project_id):
         print(f"JSON解析失败: {e}")
         return None
 
-def send_gotify_notification(project_id, message):
+def send_gotify_notification(project_id, project_name, message):
     try:
         response = requests.post(
             f"{GOTIFY_URL}/message?token={GOTIFY_TOKEN}",
             json={  
                 "message": message,
                 "priority": 8,
-                "title": "BW/BML票务状态变化，可能是有票啦！",
+                "title": f"{project_name}票务状态变化，可能是有票啦！",  # 修改标题
                 "extras": {
                     "client::notification": {
                         "click": {
@@ -98,11 +99,17 @@ def print_status_info(current_time, status_info):
 def monitor_ticket_status():
     """监控票务状态"""
     print("可选项目:", ", ".join(f"{k}:{v}" for k,v in PROJECT_IDS.items()))
-    project_id = input("请输入项目ID: ").strip()
+    project_input = input("请输入项目ID或名称: ").strip()
     
-    project_id = PROJECT_IDS.get(project_id.upper(), project_id)
+    # 获取项目ID和名称
+    if project_input.upper() in PROJECT_IDS:
+        project_id = PROJECT_IDS[project_input.upper()]
+        project_name = project_input.upper()
+    else:
+        project_id = project_input
+        project_name = PROJECT_NAMES.get(project_id, "项目")  # 默认使用"项目"如果找不到名称
     
-    print(f"\n开始监控票务状态(项目ID: {project_id})...")
+    print(f"\n开始监控票务状态(项目: {project_name}, ID: {project_id})...")
     print(f"检查频率: 每{CHECK_INTERVAL}秒一次")
     
     last_status = None
@@ -137,16 +144,16 @@ def monitor_ticket_status():
             if first_run or (last_status and status_info['sale_flag'] != last_status['sale_flag']):
                 message = f"""
                 {'🔄 首次状态检测 🔄' if first_run else '⚠️ 票务状态变化 ⚠️'}
-                --------------------------
-                项目ID: {project_id}
-                {'当前状态' if first_run else '旧状态'}: {last_status['sale_flag'] if last_status and not first_run else status_info['sale_flag']}
-                {'新状态: ' + status_info['sale_flag'] if not first_run else ''}
-                开售时间: {status_info['sale_start']}
-                --------------------------
+--------------------------
+项目: {project_name} (ID: {project_id})
+{'当前状态' if first_run else '旧状态'}: {last_status['sale_flag'] if last_status and not first_run else status_info['sale_flag']}
+{'新状态: ' + status_info['sale_flag'] if not first_run else ''}
+开售时间: {status_info['sale_start']}
+--------------------------
                 """ 
                 
                 print("\n检测到状态变化，发送通知..." if not first_run else "\n首次检测，发送通知...")
-                send_gotify_notification(project_id, message.strip())
+                send_gotify_notification(project_id, project_name, message.strip())  # 传递project_name参数
                 first_run = False
             
             last_status = status_info
