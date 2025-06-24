@@ -5,8 +5,8 @@ from datetime import datetime
 
 PROJECT_IDS = {"BW": "102194", "BML": "102626"} 
 CHECK_INTERVAL = 5  # 检查间隔(秒)
-GOTIFY_URL = "http://49.234.25.178:8080"  # Gotify服务器地址
-GOTIFY_TOKEN = "Apq--PMSLTGCNsV"  # Gotify应用token
+GOTIFY_URL = "http://localhost:8080"  # Gotify服务器地址
+GOTIFY_TOKEN = ""  # Gotify应用token
 
 # 自定义通知
 NOTIFICATION_TEMPLATE = {
